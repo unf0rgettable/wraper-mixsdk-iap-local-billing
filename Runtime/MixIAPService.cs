@@ -20,6 +20,7 @@ public class MixIAPService : IIAPService,IIAPRevenueEvent
     private readonly CrossPlatformTangles _crossPlatformTangles;
     private readonly List<string> _boughtProducts;
     private readonly IAPService.ProductCollections _productCollection;
+    private MixSDKConfig _mixSDKConfig;
     public event Action<string> OnPurchasingSuccess;
     public event Action<string> OnPurchasingFailed;
     public event Action OnInitializationComplete;
@@ -36,6 +37,7 @@ public class MixIAPService : IIAPService,IIAPRevenueEvent
 
     public void Init(MixSDKConfig mixSDKConfig)
     {
+        _mixSDKConfig = mixSDKConfig;
         MixIap.instance.Init(mixSDKConfig, (s)=>
         {
             OnInit();
@@ -61,6 +63,10 @@ public class MixIAPService : IIAPService,IIAPRevenueEvent
                 
                 MixIap.instance.GetAllNonConsumable();
             }
+#if !UNITY_EDITOR && IAP_DEBUG
+            var product = GetRuntimeProductWrapper(e.itemId) as RuntimeProductWrapper;
+            product?.Purchase();            
+#endif
             OnPurchasingSuccess?.Invoke(e.itemId);
             //send item
             //MixIap.instance.FinishPurchase(e.purchasedProduct.definition.id);
@@ -76,7 +82,7 @@ public class MixIAPService : IIAPService,IIAPRevenueEvent
 
     public void Purchase(string id, bool freePurchase = false)
     {
-/*#if IAP_DEBUG || UNITY_EDITOR
+#if IAP_DEBUG || UNITY_EDITOR
         var product = (GetProductWrapper(id) as EditorProductWrapper);
 
         if (product is null) return;
@@ -86,20 +92,23 @@ public class MixIAPService : IIAPService,IIAPRevenueEvent
         product!.Purchase();
         OnPurchasingSuccess?.Invoke(id);
         PurchasingProductSuccess(id);
-#else*/
+#else
 
             if (freePurchase)
             {
+                var product = GetRuntimeProductWrapper(id) as RuntimeProductWrapper;
+
+                product?.Purchase();
                 OnPurchasingSuccess?.Invoke(id);
                 PurchasingProductSuccess(id);
                 return;
             }
-
+            
             MixIap.instance.PurchaseItem(id, (value)=>
             {
                 OnPurchasingFailed?.Invoke(value);
             });
-//#endif
+#endif
     }
 
     public void RestorePurchasedProducts(Action<bool> callback)
@@ -109,7 +118,6 @@ public class MixIAPService : IIAPService,IIAPRevenueEvent
 
     public IProductWrapper GetProductWrapper(string id)
     {
-        
 #if IAP_DEBUG || UNITY_EDITOR
         return GetDebugProductWrapper(id);
 #else
@@ -127,7 +135,19 @@ public class MixIAPService : IIAPService,IIAPRevenueEvent
 
     private IProductWrapper GetDebugProductWrapper(string id)
     {
-        throw new NotImplementedException();
+        return _productCollection.GetEditorProductWrapper(id);
+    }
+
+    private IProductWrapper GetRuntimeProductWrapper(string id)
+    {
+        var itemInfo = _mixSDKConfig.mixInput.items.FirstOrDefault(i => i.itemId == id);
+        float price = 0.0F;
+        float.TryParse(itemInfo.usdPrice, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out price);
+        return new RuntimeProductWrapper(
+            new ProductParams(
+                itemInfo.itemId,
+                itemInfo.type,
+                (decimal)price));
     }
 
     public event Action<IDataEventEcommerce> OnPurchasingProductSuccess;

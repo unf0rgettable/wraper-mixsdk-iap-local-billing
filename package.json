@@ -1,7 +1,7 @@
 {
   "name": "com.littlebitgames.wrapermixiap",
   "displayName": "Wraper MixSdk IAP",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "unity": "2021.1",
   "unityRelease": "6f1",
   "category": "Module",
