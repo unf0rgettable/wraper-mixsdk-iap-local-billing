@@ -34,11 +34,8 @@ public class MixIAPService : IIAPService,IIAPRevenueEvent
 
     public void Init(MixSDKConfig mixSDKConfig)
     {
+        MixMain.instance.IapInit(OnInit);
         _mixSDKConfig = mixSDKConfig;
-        MixIap.instance.Init(mixSDKConfig, (s)=>
-        {
-            OnInit();
-        });
         foreach (var item in mixSDKConfig.mixInput.items)
         {
             var offerConfig = _offerConfigs.FirstOrDefault(o => o.Id == item.itemId);
