@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using LittleBit;
 using LittleBit.Modules.IAppModule.Data.ProductWrappers;
 using LittleBit.Modules.IAppModule.Data.Purchases;
 using LittleBit.Modules.IAppModule.Services;
@@ -16,25 +17,28 @@ public class MixIAPService : IIAPService,IIAPRevenueEvent
     private const string ItemType = "Offer";
     
     private readonly List<OfferConfig> _offerConfigs;
+    private readonly InitIap _initIap;
     private readonly List<string> _boughtProducts;
     private readonly IAPService.ProductCollections _productCollection;
     private MixSDKConfig _mixSDKConfig;
     public event Action<string> OnPurchasingSuccess;
     public event Action<string> OnPurchasingFailed;
     public event Action OnInitializationComplete;
-    public bool IsInitialized => MixIap.instance.isInit;
+    public bool IsInitialized => _initIap != null ? _initIap.IsInit : false;
 
     [Preserve]
-    public MixIAPService(List<OfferConfig> offerConfigs)
+    public MixIAPService(List<OfferConfig> offerConfigs, InitIap initIap)
     {
         _offerConfigs = offerConfigs;
+        _initIap = initIap;
         _boughtProducts = new List<string>();
         _productCollection = new IAPService.ProductCollections();
     }
 
     public void Init(MixSDKConfig mixSDKConfig)
     {
-        MixMain.instance.IapInit(OnInit);
+        _initIap.OnCompleteInit +=  OnInit;
+        _initIap.Init();
         _mixSDKConfig = mixSDKConfig;
         foreach (var item in mixSDKConfig.mixInput.items)
         {
