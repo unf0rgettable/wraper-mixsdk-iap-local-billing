@@ -7,6 +7,7 @@ using LittleBit.Modules.IAppModule.Data.Purchases;
 using LittleBit.Modules.IAppModule.Services;
 using LittleBitGames.Environment.Events;
 using MixNameSpace;
+using UnityEngine;
 using UnityEngine.Scripting;
 
 public class MixIAPService : IIAPService,IIAPRevenueEvent
