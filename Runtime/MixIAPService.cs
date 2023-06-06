@@ -46,7 +46,8 @@ public class MixIAPService : IIAPService,IIAPRevenueEvent
             var offerConfig = _offerConfigs.FirstOrDefault(o => o.Id == item.itemId);
             if (offerConfig == null)
             {
-                throw new Exception("Not inited offerconfig with Id - " + item.itemId);
+                Debug.LogError("Not inited offerconfig with Id - " + item.itemId);
+                continue;
             }
             _productCollection.AddConfig(offerConfig);
         }
