@@ -61,7 +61,8 @@ public class MixIAPService : IIAPService,IIAPRevenueEvent
                 
                 MixIap.instance.GetAllNonConsumable();
             }
-#if !UNITY_EDITOR && IAP_DEBUG
+            
+#if !UNITY_EDITOR && !IAP_DEBUG
             var product = GetRuntimeProductWrapper(e.itemId) as RuntimeProductWrapper;
             product?.Purchase();            
 #endif
