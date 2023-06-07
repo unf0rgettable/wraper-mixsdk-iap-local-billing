@@ -41,15 +41,13 @@ public class MixIAPService : IIAPService,IIAPRevenueEvent
         _initIap.OnCompleteInit +=  OnInit;
         _initIap.Init();
         _mixSDKConfig = mixSDKConfig;
-        foreach (var item in mixSDKConfig.mixInput.items)
+        foreach (var offer in _offerConfigs)
         {
-            var offerConfig = _offerConfigs.FirstOrDefault(o => o.Id == item.itemId);
-            if (offerConfig == null)
+            if (_mixSDKConfig.mixInput.items.FirstOrDefault(v => v.itemId == offer.Id) == null)
             {
-                Debug.LogError("Not inited offerconfig with Id - " + item.itemId);
-                continue;
+                Debug.LogError($"Offer with id {offer.Id} not contains in mixSdkConfig");
             }
-            _productCollection.AddConfig(offerConfig);
+            _productCollection.AddConfig(offer);
         }
         
         MixIap.instance.SetAction((e) =>
