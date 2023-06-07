@@ -10,13 +10,13 @@ using MixNameSpace;
 using UnityEngine;
 using UnityEngine.Scripting;
 
-public class MixIAPService : IIAPService,IIAPRevenueEvent
+public class MixIAPService : IIAPService, IIAPRevenueEvent
 {
     //ToDo понять что это такое)
     private const string CartType = "Shop";
     private const string Signature = "VVO";
     private const string ItemType = "Offer";
-    
+
     private readonly List<OfferConfig> _offerConfigs;
     private readonly InitIap _initIap;
     private readonly List<string> _boughtProducts;
@@ -38,7 +38,7 @@ public class MixIAPService : IIAPService,IIAPRevenueEvent
 
     public void Init(MixSDKConfig mixSDKConfig)
     {
-        _initIap.OnCompleteInit +=  OnInit;
+        _initIap.OnCompleteInit += OnInit;
         _initIap.Init();
         _mixSDKConfig = mixSDKConfig;
         foreach (var offer in _offerConfigs)
@@ -47,24 +47,24 @@ public class MixIAPService : IIAPService,IIAPRevenueEvent
             {
                 Debug.LogError($"Offer with id {offer.Id} not contains in mixSdkConfig");
             }
+
             _productCollection.AddConfig(offer);
         }
-        
+
         MixIap.instance.SetAction((e) =>
         {
             if (e.itemType == ProductType.Consumable)
             {
                 MixIap.instance.FinishPurchase(e);
             }
-            else if(e.itemType == ProductType.NonConsumable)
+            else if (e.itemType == ProductType.NonConsumable)
             {
-                
                 MixIap.instance.GetAllNonConsumable();
             }
-            
+
 #if !UNITY_EDITOR && !IAP_DEBUG
             var product = GetRuntimeProductWrapper(e.itemId) as RuntimeProductWrapper;
-            product?.Purchase();            
+            product?.Purchase();
 #endif
             OnPurchasingSuccess?.Invoke(e.itemId);
             //send item
@@ -85,14 +85,13 @@ public class MixIAPService : IIAPService,IIAPRevenueEvent
         var product = (GetProductWrapper(id) as EditorProductWrapper);
 
         if (product is null) return;
-            
+
         if (!product.Metadata.CanPurchase) return;
-            
+
         product!.Purchase();
         OnPurchasingSuccess?.Invoke(id);
         PurchasingProductSuccess(id);
 #else
-
             if (freePurchase)
             {
                 var product = GetRuntimeProductWrapper(id) as RuntimeProductWrapper;
@@ -141,16 +140,32 @@ public class MixIAPService : IIAPService,IIAPRevenueEvent
     {
         var itemInfo = _mixSDKConfig.mixInput.items.FirstOrDefault(i => i.itemId == id);
         float price = 0.0F;
-        float.TryParse(itemInfo.usdPrice, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out price);
-        return new RuntimeProductWrapper(
-            new ProductParams(
-                itemInfo.itemId,
-                itemInfo.type,
-                (decimal)price));
+        if (itemInfo != null)
+        {
+            float.TryParse(itemInfo.usdPrice, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out price);
+
+            return new RuntimeProductWrapper(
+                new ProductParams(
+                    itemInfo.itemId,
+                    itemInfo.type,
+                    (decimal)price));
+        }
+        else
+        {
+            var offers = _offerConfigs;
+            var offer = offers.FirstOrDefault(v => v.Id == id);
+            if (offer != null)
+            {
+                return new RuntimeProductWrapper(new ProductParams(offer.Id, (int)offer.ProductType, (decimal)price));
+            }
+
+            throw new Exception($"hasn't offer with id {id}");
+        }
     }
 
     public event Action<IDataEventEcommerce> OnPurchasingProductSuccess;
-    
+
     private void PurchasingProductSuccess(string productId)
     {
         var product = GetProductWrapper(productId);
@@ -160,10 +175,10 @@ public class MixIAPService : IIAPService,IIAPRevenueEvent
 
         var data = new DataEventEcommerce(
             metadata.CurrencyCode,
-            (double) metadata.LocalizedPrice,
+            (double)metadata.LocalizedPrice,
             ItemType, definition.Id,
             CartType, receipt,
-            Signature);       
+            Signature);
         OnPurchasingProductSuccess?.Invoke(data);
     }
 }
