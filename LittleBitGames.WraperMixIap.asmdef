@@ -7,10 +7,7 @@
         "GUID:60bfecf5cb232594891bc622f40d6bed",
         "GUID:0aadd910c4982ca4190ebc1e869119a7"
     ],
-    "includePlatforms": [
-        "Android",
-        "iOS"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
