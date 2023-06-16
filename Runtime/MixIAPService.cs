@@ -53,6 +53,9 @@ public class MixIAPService : IIAPService, IIAPRevenueEvent
 
         MixIap.instance.SetAction((e) =>
         {
+            Debug.LogWarning("BEFORE TEST!");
+            PlayerPrefs.SetInt("Test",1);
+            Debug.LogWarning("AFTER TEST!");
             if (e.itemType == ProductType.Consumable)
             {
                 MixIap.instance.FinishPurchase(e);
