@@ -53,28 +53,22 @@ public class MixIAPService : IIAPService, IIAPRevenueEvent
 
         MixIap.instance.SetAction((e) =>
         {
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            if (e.itemType == ProductType.Consumable)
             {
-                Debug.LogWarning("BEFORE TEST!");
-                PlayerPrefs.SetInt("Test",1);
-                Debug.LogWarning("AFTER TEST!");
-                if (e.itemType == ProductType.Consumable)
-                {
-                    MixIap.instance.FinishPurchase(e);
-                }
-                else if (e.itemType == ProductType.NonConsumable)
-                {
-                    MixIap.instance.GetAllNonConsumable();
-                }
+                MixIap.instance.FinishPurchase(e);
+            }
+            else if (e.itemType == ProductType.NonConsumable)
+            {
+                MixIap.instance.GetAllNonConsumable();
+            }
 
 #if !UNITY_EDITOR && !IAP_DEBUG
             var product = GetRuntimeProductWrapper(e.itemId) as RuntimeProductWrapper;
             product?.Purchase();
 #endif
-                OnPurchasingSuccess?.Invoke(e.itemId);
-                //send item
-                //MixIap.instance.FinishPurchase(e.purchasedProduct.definition.id);
-            });
+            OnPurchasingSuccess?.Invoke(e.itemId);
+            //send item
+            //MixIap.instance.FinishPurchase(e.purchasedProduct.definition.id);
         });
     }
 
